@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# Virtualenv
+venv/
+.venv/
+env/
+
+# Environment
+.env
+
+# Docker
+*.log
+*.pid
+*.sock
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.iml
+
+# Mac/Linux
+.DS_Store
+*.swp
+
+# Logs/Tmp
+logs/
+tmp/
+
