@@ -1,9 +1,13 @@
-BROKER = "localhost"
-PORT = 1883
-CLIENT_ID = "crane-bridge"
+import os
+
+BROKER = os.getenv("BROKER", "localhost")
+PORT = int(os.getenv("PORT", 1883))
+CLIENT_ID = os.getenv("CLIENT_ID", "crane-bridge")
 
 MQTT_TOPICS = [
-    ("crane/control", 0),  # Топик для управления: "up", "down", "left", "right", "stop"
+    ("crane/control", 0),
+    ("crane/status", 0),
+    ("crane/feedback", 0)
 ]
 
 CRANE_MAC = "80:EA:CA:00:D5:8B"

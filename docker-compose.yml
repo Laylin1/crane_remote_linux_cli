@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    restart: always
+    networks:
+      - crane-network
+
+  crane-app:
+    build: .
+    container_name: crane-remote
+    depends_on:
+      - mosquitto
+    environment:
+      - BROKER=mosquitto
+      - PORT=1883
+    devices:
+      - /dev/hci0:/dev/hci0
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /run/dbus:/run/dbus:ro
+      - /var/run/dbus:/var/run/dbus:ro
+    privileged: true
+    restart: always
+    networks:
+      - crane-network
+
+networks:
+  crane-network:
+    driver: bridge
+
+volumes:
+  mosquitto_data:
+  mosquitto_logs:
+  mosquitto2_data:
+  mosquitto2_logs:

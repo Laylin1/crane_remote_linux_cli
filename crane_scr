@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+BROKER="localhost"
+PORT=1883
+TOPIC="crane/control"
+
+case "$1" in
+  up|down|left|right|stop)
+    mosquitto_pub -h "$BROKER" -p "$PORT" -t "$TOPIC" -m "$1"
+    ;;
+  *)
+    echo "Использование: crane {up|down|left|right|stop}"
+    exit 1
+    ;;
+esac
+
