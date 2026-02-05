@@ -2,6 +2,7 @@ import asyncio
 import logging
 import threading
 import socket
+import time
 from paho.mqtt.client import Client, MQTTv311
 
 from crane_bt import ZhiyunCraneBLE
@@ -89,7 +90,7 @@ def mqtt_thread_func():
         except Exception as e:
             logger.warning(f"MQTT connection failed: {e}, retrying in 2s...")
         
-        asyncio.sleep(2)
+        time.sleep(2)
 
     logger.info("MQTT loop started")
     mqtt_client.loop_forever()
