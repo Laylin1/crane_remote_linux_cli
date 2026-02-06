@@ -50,7 +50,7 @@ class CommandManager:
 crane = ZhiyunCraneBLE(CRANE_MAC)
 cmd_manager = CommandManager(timeout=0.5)
 loop = asyncio.new_event_loop()
-mqtt_client: Client | None = None
+mqtt_client = Client(client_id=CLIENT_ID, protocol=MQTTv311)
 mqtt_thread_handle: threading.Thread | None = None
 
 

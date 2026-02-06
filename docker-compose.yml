@@ -3,10 +3,15 @@ version: '3.8'
 services:
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto
     ports:
       - "1883:1883"
       - "9001:9001"
+
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "health", "-m", "ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto_data:/mosquitto/data
@@ -17,7 +22,6 @@ services:
 
   crane-app:
     build: .
-    container_name: crane-remote
     depends_on:
       - mosquitto
     environment:
