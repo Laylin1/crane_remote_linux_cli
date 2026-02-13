@@ -1,6 +1,6 @@
 import os
 
-BROKER = os.getenv("BROKER", "localhost")
+BROKER = os.getenv("BROKER", "0.0.0.0")
 PORT = int(os.getenv("PORT", 1883))
 
 MQTT_TOPICS = {
