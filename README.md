@@ -10,6 +10,7 @@ The architecture is designed to allow for the optional data transfer protocol.
 - Crane 2S Device
 
 ## Project Structue 
+```bash
 
 .
 ├── docks
@@ -34,11 +35,12 @@ The architecture is designed to allow for the optional data transfer protocol.
 │   │   ├── device.py
 │   │   └── input.py
 │   │
-│   ├── main.py
+│   └── main.py
 │       
 ├── utils
-│   ├── logger.py
+│   └── logger.py
 
+```
 
 ## Installation
 
@@ -48,20 +50,27 @@ The architecture is designed to allow for the optional data transfer protocol.
 - Linux with BLE support
 
 ### Setup
+
+```bash
 - git clone https://github.com/Laylin1/crane_remote_linux_cli.git
 - pip install -r requirements
+```
 
 ## Start
-- mosquitto -v
-- python3 -m src.main (In another terminal)
 
+```bash
+- mosquitto -v
+- python3 -m src.main # In another terminal)
+```
 ## Example execution
+
+```bash
 mosquitto_pub -h 127.0.0.1 -t crane/control -m up
 mosquitto_pub -h 127.0.0.1 -t crane/control -m down
 mosquitto_pub -h 127.0.0.1 -t crane/control -m left
 mosquitto_pub -h 127.0.0.1 -t crane/control -m right
 mosquitto_pub -h 127.0.0.1 -t crane/control -m stop
-
+```
 
 ## Roadmap
 - work via USB protocol
