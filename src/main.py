@@ -1,11 +1,14 @@
 import asyncio
+import threading
 import signal
+from src.devices.camera_controller import CameraController
 from src.core.command_manager import CommandManager
 from src.inputs.mqtt_adapter import MQTTAdapter
 from src.devices.zhiyun_crane_ble import ZhiyunCraneBLE
 from utils.logger import setup_logger
 from src.config.settings import (
     BROKER,
+    CAMERA_COMMANDS,
     PORT,
     MQTT_TOPICS,
     COMMAND_MAP,
@@ -14,24 +17,40 @@ from src.config.settings import (
     MAC_ADDRESS as DEVICE_ADDRESS,
 )
 
+
+
 logger = setup_logger("main")
 
 
 async def main():
+    
+    camera = CameraController()
+    camera_thread = threading.Thread(
+        target=camera.open_camera,
+        name="CameraCaptureThread",
+        daemon=True,               # завершится автоматически при выходе из программы
+    )
+    camera_thread.start()
+    
     # 1. Драйвер BLE
     crane = ZhiyunCraneBLE(device_address=DEVICE_ADDRESS)
 
-    # 2. Подключение к устройству
-    try:
-        await crane.connect()
-        logger.info("BLE подключение установлено")
-    except Exception as e:
-        logger.error(f"Не удалось подключиться к BLE: {e}")
-        return
+    # Подключение к устройству с автоматическим повтором при неудаче
+    while True:
+        try:
+            await crane.connect()
+            logger.info("BLE подключение установлено")
+            break
+        except Exception as e:
+            logger.error(f"BLE connect failed: {e}")
+            logger.info("Retrying in 5 seconds...")
+            await asyncio.sleep(5)
+
 
     # 3. Менеджер команд
     manager = CommandManager(
-        device_interface=crane,
+        crane=crane,
+        camera=camera,
         timeout=0.5
     )
 
@@ -40,8 +59,10 @@ async def main():
         broker=BROKER,
         port=PORT,
         topics=MQTT_TOPICS,
-        command_handler=manager.receive_command
+        command_handler=manager.receive_command,
+        camera_command_handler=manager.receive_command_camera
     )
+    
 
     try:
         await mqtt_input.start()
@@ -51,13 +72,16 @@ async def main():
 
         while True:
             active = manager.get_active_command()
-            if active and active in COMMAND_MAP:
-                data = COMMAND_MAP[active]
-                try:
-                    await crane.send_command(data)
-                    logger.debug(f"Отправлено: {active} → {data.hex()}")
-                except Exception as e:
-                    logger.error(f"Ошибка отправки {active}: {e}")
+            if active and (active in COMMAND_MAP or active in CAMERA_COMMANDS):
+                if active in COMMAND_MAP:
+                    data = COMMAND_MAP[active]
+                    try:
+                        await crane.send_command(data)
+                        logger.debug(f"Отправлено: {active} → {data.hex()}")
+                    except Exception as e:
+                        logger.error(f"Ошибка отправки {active}: {e}")
+                elif active in CAMERA_COMMANDS:
+                    manager.receive_command_camera(active)
 
             await asyncio.sleep(0.12)
 

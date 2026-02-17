@@ -34,6 +34,19 @@ class CommandInputInterface(ABC):
                 self.command_handler(direction)
         except Exception as e:
             print(f"Error emitting command: {e}")
+            
+    async def _emit_camera_command(self, command: str) -> None:
+        if self.command_handler is None:
+            self.logger.warning("No command handler set, cannot emit camera command")  
+            return
+        
+        try:
+            if asyncio.iscoroutinefunction(self.command_handler):
+                await self.command_handler(command)
+            else:
+                self.command_handler(command)
+        except Exception as e:
+            logger.error(f"Error emitting camera command: {e}")
     
     @property
     def is_running(self) -> bool:

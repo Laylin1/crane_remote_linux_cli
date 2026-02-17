@@ -32,3 +32,13 @@ env/
 logs/
 tmp/
 
+# Media
+media/photo/
+media/video/
+.avi
+.mp4
+.mov
+.jpg
+.png
+.jpeg
+

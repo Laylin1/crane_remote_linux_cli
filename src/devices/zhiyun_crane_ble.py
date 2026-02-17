@@ -49,7 +49,7 @@ class ZhiyunCraneBLE(DeviceInterface):
                     logger.error(f"Service {CRANE_SERVICE_UUID} not found. Available: {available}")
                     raise BleakError("Required service not found")
 
-                # Находим характеристику для записи команд
+                # Полечение характеристики
                 self.write_char = crane_service.get_characteristic(CRANE_WRITE_CHAR_UUID)
                 if not self.write_char:
                     raise BleakError(f"Write characteristic {CRANE_WRITE_CHAR_UUID} not found")
@@ -77,7 +77,7 @@ class ZhiyunCraneBLE(DeviceInterface):
         self.running = False
 
     async def send_command(self, command: bytes) -> None:
-        """Отправляет байтовую команду на гимбал"""
+        """Отправка байтовой команды на устройство"""
         if not self.is_connected:
             await self.connect()
 
@@ -99,23 +99,27 @@ class ZhiyunCraneBLE(DeviceInterface):
             raise
 
     async def ble_reconnect(self) -> None:
-        """Пытается переподключиться при потере связи"""
-        logger.info("Starting BLE reconnect sequence...")
-        await self.disconnect()
+        """Бесконечное переподключение к устройству при потере связи"""
+        logger.info("Starting BLE reconnect loop...")
+        
+        attempt = 1
 
-        for attempt in range(1, 4):  # 3 попытки
+        while True:
             try:
-                logger.info(f"Reconnect attempt {attempt}/3")
-                await asyncio.sleep(1.5)  # небольшая задержка
+                await self.disconnect()
+
+                logger.info(f"Reconnect attempt {attempt}")
+                await asyncio.sleep(min(2 ** attempt, 30))  
+
                 await self.connect()
+
                 logger.info("Reconnect successful")
-                return
+                return  # выходим если подключились
+
             except Exception as e:
                 logger.warning(f"Reconnect attempt {attempt} failed: {e}")
-                await asyncio.sleep(2 ** attempt)  # backoff: 2s, 4s, 8s...
+                attempt += 1
 
-        logger.error("All reconnect attempts failed")
-        raise ConnectionError("Failed to reconnect to Zhiyun Crane")
 
     def _notification_handler(self, sender: BleakGATTCharacteristic, data: bytearray):
         """Обработчик входящих уведомлений от гимбала (положение, ошибки и т.д.)"""

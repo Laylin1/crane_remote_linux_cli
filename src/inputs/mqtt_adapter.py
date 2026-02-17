@@ -3,7 +3,7 @@ from paho.mqtt import client as mqtt_client
 from typing import List, Tuple
 
 from src.interfaces.input import CommandInputInterface  
-from src.config.settings import BROKER, PORT, MQTT_TOPICS, COMMAND_MAP
+from src.config.settings import BROKER, PORT, MQTT_TOPICS, COMMAND_MAP, CAMERA_COMMANDS
 from utils.logger import setup_logger
 
 logger = setup_logger("mqtt_adapter")
@@ -16,8 +16,10 @@ class MQTTAdapter(CommandInputInterface):
         port: int = PORT,
         topics: List[Tuple[str, int]] = MQTT_TOPICS,
         command_handler=None,
+        camera_command_handler=None
     ):
         super().__init__(command_handler)
+        self.camera_command_handler = camera_command_handler
         self.broker = broker
         self.port = port
         self.topics = topics
@@ -56,6 +58,11 @@ class MQTTAdapter(CommandInputInterface):
                     self._emit_command(command),
                     self._loop
                 )
+            elif command in CAMERA_COMMANDS:
+                if self.camera_command_handler:
+                    self.camera_command_handler(command)
+                else:
+                    logger.warning("Camera command handler not set")
             else:
                 logger.warning(f"Неизвестная команда: {command!r}")
 

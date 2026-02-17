@@ -2,18 +2,31 @@ import asyncio
 import time
 from utils.logger import setup_logger
 from src.config.settings import COMMAND_MAP
+from src.config.settings import CAMERA_COMMANDS
+from src.devices.camera_controller import CameraController
 
 logger = setup_logger("command_manager")
 
+camera = CameraController()
+
 
 class CommandManager:
-    def __init__(self, timeout: float = 0.5, device_interface=None):
-        self.device_interface = device_interface
+    def __init__(self, timeout: float = 0.5, crane=None, camera=None):
+        self.crane = crane
+        self.camera = camera
         self.timeout = timeout
         self.current_direction: str | None = None
         self.command_start_time: float = 0.0
         self.loop: asyncio.AbstractEventLoop | None = None
         self.is_hold_mode = False
+        
+    def receive_command_camera(self, command: str):
+        if command in CAMERA_COMMANDS:
+            self.camera.handle_command(command)
+        else:
+            logger.warning(f"Unknown camera command: {command}")  
+        
+        logger.info(f"Received camera command: {command}")
         
     def receive_command(self, direction: str):
         if direction not in COMMAND_MAP and direction != "stop":

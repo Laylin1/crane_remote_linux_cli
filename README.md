@@ -53,7 +53,7 @@ The architecture is designed to allow for the optional data transfer protocol.
 
 ```bash
 - git clone https://github.com/Laylin1/crane_remote_linux_cli.git
-- pip install -r requirements
+- pip install -r requirements.txt
 ```
 
 ## Start
@@ -70,6 +70,12 @@ mosquitto_pub -h 127.0.0.1 -t crane/control -m down
 mosquitto_pub -h 127.0.0.1 -t crane/control -m left
 mosquitto_pub -h 127.0.0.1 -t crane/control -m right
 mosquitto_pub -h 127.0.0.1 -t crane/control -m stop
+
+# Camera commands
+mosquitto_pub -h 127.0.0.1 -t crane/control -m photo
+mosquitto_pub -h 127.0.0.1 -t crane/control -m record
+mosquitto_pub -h 127.0.0.1 -t crane/control -m stop_record
+
 ```
 
 ## Roadmap
