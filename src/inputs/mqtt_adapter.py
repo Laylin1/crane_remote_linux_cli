@@ -40,7 +40,7 @@ class MQTTAdapter(CommandInputInterface):
             logger.info("Connected to MQTT broker")
             for topic, qos in self.topics:
                 client.subscribe(topic, qos=qos)
-                logger.info(f"Subscribed to {topic} (QoS {qos})")
+                logger.info(f"All topics: {self.topics}")
         else:
             logger.error(f"Connection failed, code = {rc}")
 

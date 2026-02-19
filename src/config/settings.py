@@ -3,9 +3,10 @@ import os
 BROKER = os.getenv("BROKER", "0.0.0.0")
 PORT = int(os.getenv("PORT", 1883))
 
-MQTT_TOPICS = {
-    ("crane/control", 0)
-}
+MQTT_TOPICS = [
+    ("crane/control", 0),
+    ("crane/camera", 0),
+]
 
 MAC_ADDRESS = os.getenv("CRANE_MAC", "80:EA:CA:00:D5:8B")
 
