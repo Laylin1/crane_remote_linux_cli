@@ -66,11 +66,29 @@ The architecture supports both MQTT for gimbal control and HTTP for camera strea
 
 ## Start
 
+Before running make sure your MQTT broker (e.g. mosquitto) is up:
+
 ```bash
-- mosquitto -v
-- python3 -m src.main # In another terminal)
+mosquitto -v
 ```
+
+Then launch the controller:
+
+```bash
+python3 -m src.main
+```
+
+By default the program initialises the camera capture thread and will open a
+preview window when a client connects to the HTTP stream.  If you would rather
+run completely headless (no GUI at all) set the environment variable
+`PREVIEW_ENABLED=false` or omit it entirely; the HTTP MJPEG stream will still
+work without the window.
+
+You can also disable the camera hardware completely with
+`CAMERA_ENABLED=false` (useful when testing without a device).
 ## Example execution
+
+**Gimbal commands via MQTT**
 
 ```bash
 mosquitto_pub -h 127.0.0.1 -t crane/control -m up
@@ -78,13 +96,28 @@ mosquitto_pub -h 127.0.0.1 -t crane/control -m down
 mosquitto_pub -h 127.0.0.1 -t crane/control -m left
 mosquitto_pub -h 127.0.0.1 -t crane/control -m right
 mosquitto_pub -h 127.0.0.1 -t crane/control -m stop
+```
 
-# Camera commands
+**Camera control via MQTT**
+
+```bash
 mosquitto_pub -h 127.0.0.1 -t crane/camera -m photo
 mosquitto_pub -h 127.0.0.1 -t crane/camera -m record
 mosquitto_pub -h 127.0.0.1 -t crane/camera -m stop_record
-
 ```
+
+**HTTP endpoints for live view and snapshots**
+
+Once the server is running you can access the camera over HTTP on port 8000:
+
+* `GET /health` ‑‑ basic health check
+* `GET /api/camera/photo` ‑‑ current JPEG frame
+* `GET /api/camera/stream` ‑‑ MJPEG live stream
+* `POST /api/camera/capture` ‑‑ take photo
+* `POST /api/camera/record/start` and `/stop` ‑‑ control recording
+* `GET /api/camera/status` ‑‑ camera status
+
+Refer to `HTTP_API.md` for detailed usage examples.
 
 ## Roadmap
 - work via USB protocol
