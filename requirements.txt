@@ -2,3 +2,7 @@ paho-mqtt>=2.1.0
 bleak>=0.22.0
 opencv-python>=4.13.0.92
 numpy>=1.19.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+aiofiles>=23.0.0

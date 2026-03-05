@@ -14,6 +14,8 @@ os.makedirs("media/video", exist_ok=True)
 camera_number = 0  # по умолчанию, можно изменить на другой индекс камеры при необходимости
 
 
+from src.config.settings import PREVIEW_ENABLED
+
 class CameraController:
     def __init__(self):
         self.recording = False
@@ -21,6 +23,28 @@ class CameraController:
         self.current_frame = None
         self.lock = threading.Lock()  # чтобы безопасно брать фрейм в разных потоках
         self.running = True
+        # preview/window management
+        self.show_window = False
+        self.window_created = False
+        self.preview_allowed = PREVIEW_ENABLED
+
+    def enable_preview(self):
+        """Start showing the camera window. Safe to call multiple times.
+
+        If PREVIEW_ENABLED is False the call has no effect; this allows running
+        completely headless even when the HTTP stream endpoint is used.
+        """
+        if not self.preview_allowed:
+            logger.debug("Preview not allowed by configuration, ignoring enable")
+            return
+        self.show_window = True
+
+    def disable_preview(self):
+        """Stop showing the camera window and destroy it if created."""
+        self.show_window = False
+        if self.window_created:
+            cv2.destroyWindow("Camera")
+            self.window_created = False
         
     def camera_number_detection(self):
         for i in range(5):
@@ -59,8 +83,8 @@ class CameraController:
         if not self.cap.isOpened():
             raise RuntimeError(f"Camera {index} not found")
 
-        cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)  
-        cv2.resizeWindow("Camera", 1280, 720)        
+        # do not create a window until preview is requested
+        # window sizing will be handled when we first show
 
         while self.running:
             ret, frame = self.cap.read()
@@ -68,15 +92,25 @@ class CameraController:
                 with self.lock:
                     self.current_frame = frame.copy()
 
-                cv2.imshow("Camera", frame)
+                # display only when requested and allowed
+                if self.show_window and self.preview_allowed:
+                    if not self.window_created:
+                        cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow("Camera", 1280, 720)
+                        self.window_created = True
 
-               
+                    cv2.imshow("Camera", frame)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        # user closed preview manually
+                        self.disable_preview()
+
                 if self.recording and self.video_writer:
                     self.video_writer.write(frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.running = False
-                break
+        # cleanup when loop exits
+        self.cap.release()
+        if self.window_created:
+            cv2.destroyAllWindows()
 
         self.cap.release()
         cv2.destroyAllWindows()

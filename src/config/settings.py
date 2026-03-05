@@ -26,3 +26,10 @@ CAMERA_COMMANDS = {
     'stop_record': 'stop_record',
 }
     
+# feature flag to disable camera initialization/startup; set to "false" in environment
+CAMERA_ENABLED = os.getenv("CAMERA_ENABLED", "true").lower() in ("1", "true", "yes")
+
+# whether the OpenCV preview window may ever be shown; turn off to run truly headless
+# Accepts 1/true/yes to enable; anything else disables.
+# default is **False** so setting the variable is required to show the window.
+PREVIEW_ENABLED = os.getenv("PREVIEW_ENABLED", "false").lower() in ("1", "true", "yes")

@@ -1,13 +1,14 @@
-## Crane 2S BLE Remte controller
+## Crane 2S BLE Remote controller
 The project is a client-server application for remote control of the Zhiyun Crane 2S via BLE, using MQTT as the transport layer.
-The architecture is designed to allow for the optional data transfer protocol.
+The architecture supports both MQTT for gimbal control and HTTP for camera streaming.
 
 ## Architecture
 
-- Client
-- Broker
-- MQTT Adapter
-- Crane 2S Device
+- Client (MQTT/HTTP)
+- MQTT Broker (gimbal control)
+- HTTP Server (camera streaming)
+- Crane 2S Device (BLE)
+- Camera Controller (ZED camera)
 
 ## Project Structue 
 ```bash

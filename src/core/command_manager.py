@@ -3,11 +3,8 @@ import time
 from utils.logger import setup_logger
 from src.config.settings import COMMAND_MAP
 from src.config.settings import CAMERA_COMMANDS
-from src.devices.camera_controller import CameraController
 
 logger = setup_logger("command_manager")
-
-camera = CameraController()
 
 
 class CommandManager:
@@ -21,11 +18,15 @@ class CommandManager:
         self.is_hold_mode = False
         
     def receive_command_camera(self, command: str):
+        if self.camera is None:
+            logger.warning("Camera not available, ignoring camera command")
+            return
+
         if command in CAMERA_COMMANDS:
             self.camera.handle_command(command)
         else:
-            logger.warning(f"Unknown camera command: {command}")  
-        
+            logger.warning(f"Unknown camera command: {command}")
+
         logger.info(f"Received camera command: {command}")
         
     def receive_command(self, direction: str):

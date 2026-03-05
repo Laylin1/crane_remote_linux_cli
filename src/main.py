@@ -4,11 +4,13 @@ import signal
 from src.devices.camera_controller import CameraController
 from src.core.command_manager import CommandManager
 from src.inputs.mqtt_adapter import MQTTAdapter
+from src.inputs.http_adapter import HTTPAdapter
 from src.devices.zhiyun_crane_ble import ZhiyunCraneBLE
 from utils.logger import setup_logger
 from src.config.settings import (
     BROKER,
     CAMERA_COMMANDS,
+    CAMERA_ENABLED,
     PORT,
     MQTT_TOPICS,
     COMMAND_MAP,
@@ -24,14 +26,21 @@ logger = setup_logger("main")
 
 async def main():
     
-    camera = CameraController()
-    camera_thread = threading.Thread(
-        target=camera.open_camera,
-        name="CameraCaptureThread",
-        daemon=True,               # завершится автоматически при выходе из программы
-    )
-    camera_thread.start()
-    
+    # camera may be disabled by configuration; create object only if enabled
+    camera = None
+    camera_thread = None
+    if CAMERA_ENABLED:
+        camera = CameraController()
+        camera_thread = threading.Thread(
+            target=camera.open_camera,
+            name="CameraCaptureThread",
+            daemon=True,               # завершится автоматически при выходе из программы
+        )
+        camera_thread.start()
+        logger.info("Camera thread started")
+    else:
+        logger.info("Camera disabled by configuration; skipping initialization")
+
     # 1. Драйвер BLE
     crane = ZhiyunCraneBLE(device_address=DEVICE_ADDRESS)
 
@@ -63,10 +72,20 @@ async def main():
         camera_command_handler=manager.receive_command_camera
     )
     
+    # 5. HTTP-адаптер для потоковой передачи видео
+    http_adapter = HTTPAdapter(
+        host="0.0.0.0",
+        port=8000,
+        camera=camera
+    )
 
     try:
         await mqtt_input.start()
         logger.info("MQTT адаптер запущен, слушаем команды...")
+        
+        # Запуск HTTP сервера в отдельной задаче
+        http_task = asyncio.create_task(http_adapter.start())
+        logger.info("HTTP сервер запущен на http://0.0.0.0:8000")
 
         loop = asyncio.get_running_loop()
 
@@ -94,6 +113,13 @@ async def main():
     finally:
         logger.info("Завершение программы...")
         await mqtt_input.stop()
+        await http_adapter.stop()
+        if 'http_task' in locals():
+            http_task.cancel()
+            try:
+                await http_task
+            except asyncio.CancelledError:
+                pass
         await crane.disconnect()
         logger.info("Программа завершена")
 
